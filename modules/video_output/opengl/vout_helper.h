@@ -280,5 +280,3 @@ int vout_display_opengl_Display(vout_display_opengl_t *vgl,
 void vout_display_opengl_SetConvergence(vout_display_opengl_t *vgl, float offset_degrees);
 
 #endif
-
-#endif
