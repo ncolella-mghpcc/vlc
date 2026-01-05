@@ -1460,6 +1460,12 @@ static const char *const mouse_wheel_texts[] = {
 #define VIEWPOINT_FOV_OUT_KEY_TEXT N_("Expand the viewpoint field of view (360°)")
 #define VIEWPOINT_ROLL_CLOCK_KEY_TEXT N_("Roll the viewpoint clockwise (360°)")
 #define VIEWPOINT_ROLL_ANTICLOCK_KEY_TEXT N_("Roll the viewpoint anti-clockwise (360°)")
+#define VR_CONVERGENCE_INCREASE_KEY_TEXT N_("Increase VR convergence")
+#define VR_CONVERGENCE_INCREASE_KEY_LONGTEXT N_("Increase stereoscopic convergence offset")
+#define VR_CONVERGENCE_DECREASE_KEY_TEXT N_("Decrease VR convergence")
+#define VR_CONVERGENCE_DECREASE_KEY_LONGTEXT N_("Decrease stereoscopic convergence offset")
+#define VR_CONVERGENCE_RESET_KEY_TEXT N_("Reset VR convergence")
+#define VR_CONVERGENCE_RESET_KEY_LONGTEXT N_("Reset stereoscopic convergence to zero")
 
 #define WALLPAPER_KEY_TEXT N_("Toggle wallpaper mode in video output")
 #define WALLPAPER_KEY_LONGTEXT N_( \
@@ -2559,6 +2565,9 @@ vlc_module_begin ()
              VOL_DOWN_KEY_LONGTEXT, false )
     add_key( "key-vol-mute", KEY_VOL_MUTE, VOL_MUTE_KEY_TEXT,
              VOL_MUTE_KEY_LONGTEXT, false )
+    add_key( "key-vr-convergence-decrease", KEY_UNSET, VR_CONVERGENCE_DECREASE_KEY_TEXT, VR_CONVERGENCE_DECREASE_KEY_LONGTEXT, false )
+    add_key( "key-vr-convergence-increase", KEY_UNSET, VR_CONVERGENCE_INCREASE_KEY_TEXT, VR_CONVERGENCE_INCREASE_KEY_LONGTEXT, false )
+    add_key( "key-vr-convergence-reset", KEY_UNSET, VR_CONVERGENCE_RESET_KEY_TEXT, VR_CONVERGENCE_RESET_KEY_LONGTEXT, false )
     add_key( "key-subdelay-up", KEY_SUBDELAY_UP,
              SUBDELAY_UP_KEY_TEXT, SUBDELAY_UP_KEY_LONGTEXT, true )
     add_key( "key-subdelay-down", KEY_SUBDELAY_DOWN,
