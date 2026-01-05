@@ -2568,15 +2568,15 @@ vlc_module_begin ()
              CHAPTER_NEXT_LONGTEXT, true )
     add_key( "key-quit", KEY_QUIT, QUIT_KEY_TEXT,
              QUIT_KEY_LONGTEXT, false )
+    add_key( "key-vr-convergence-decrease", KEY_VR_CONVERGENCE_DECREASE, VR_CONVERGENCE_DECREASE_KEY_TEXT, VR_CONVERGENCE_DECREASE_KEY_LONGTEXT, false )
+    add_key( "key-vr-convergence-increase", KEY_VR_CONVERGENCE_INCREASE, VR_CONVERGENCE_INCREASE_KEY_TEXT, VR_CONVERGENCE_INCREASE_KEY_LONGTEXT, false )
+    add_key( "key-vr-convergence-reset", KEY_VR_CONVERGENCE_RESET, VR_CONVERGENCE_RESET_KEY_TEXT, VR_CONVERGENCE_RESET_KEY_LONGTEXT, false )
     add_key( "key-vol-down", KEY_VOL_DOWN, VOL_DOWN_KEY_TEXT,
-         VOL_DOWN_KEY_LONGTEXT, false )
+             VOL_DOWN_KEY_LONGTEXT, false )
     add_key( "key-vol-mute", KEY_VOL_MUTE, VOL_MUTE_KEY_TEXT,
              VOL_MUTE_KEY_LONGTEXT, false )
     add_key( "key-vol-up", KEY_VOL_UP, VOL_UP_KEY_TEXT,
              VOL_UP_KEY_LONGTEXT, false )
-    add_key( "key-vr-convergence-decrease", KEY_UNSET, VR_CONVERGENCE_DECREASE_KEY_TEXT, VR_CONVERGENCE_DECREASE_KEY_LONGTEXT, false )
-    add_key( "key-vr-convergence-increase", KEY_UNSET, VR_CONVERGENCE_INCREASE_KEY_TEXT, VR_CONVERGENCE_INCREASE_KEY_LONGTEXT, false )
-    add_key( "key-vr-convergence-reset", KEY_UNSET, VR_CONVERGENCE_RESET_KEY_TEXT, VR_CONVERGENCE_RESET_KEY_LONGTEXT, false )
     add_key( "key-subdelay-up", KEY_SUBDELAY_UP,
              SUBDELAY_UP_KEY_TEXT, SUBDELAY_UP_KEY_LONGTEXT, true )
     add_key( "key-subdelay-down", KEY_SUBDELAY_DOWN,
@@ -2587,7 +2587,7 @@ vlc_module_begin ()
              SUBSYNC_MARKSUB_KEY_TEXT, SUBSYNC_MARKSUB_KEY_LONGTEXT, true )
     add_key( "key-subsync-apply", KEY_SUBSYNC_APPLY,
              SUBSYNC_APPLY_KEY_TEXT, SUBSYNC_APPLY_KEY_LONGTEXT, true )
-     add_key( "key-subsync-reset", KEY_SUBSYNC_RESET,
+    add_key( "key-subsync-reset", KEY_SUBSYNC_RESET,
               SUBSYNC_RESET_KEY_TEXT, SUBSYNC_RESET_KEY_LONGTEXT, true )
     add_key( "key-subpos-up", KEY_SUBPOS_UP,
              SUBPOS_UP_KEY_TEXT, SUBPOS_UP_KEY_LONGTEXT, true )
