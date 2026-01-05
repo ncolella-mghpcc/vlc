@@ -1178,45 +1178,45 @@ static int PutAction( intf_thread_t *p_intf, input_thread_t *p_input,
             break;
 
         case ACTIONID_VR_CONVERGENCE_INCREASE:
-			if( p_vout && b_vrnav )
-			{
-				// Get current value
-				float conv = var_InheritFloat( p_vout, "vr-convergence" );
-				conv += 0.5f; // Increase by 0.5 degrees
-				if (conv > 10.0f) conv = 10.0f; // Max 10 degrees
-				
-				// Create/set variable on vout
-				var_Create( p_vout, "vr-convergence", VLC_VAR_FLOAT | VLC_VAR_ISCOMMAND );
-				var_SetFloat( p_vout, "vr-convergence", conv );
-				
-				DisplayMessage( p_vout, _("Convergence: %.1f°"), conv );
-			}
-			break;
-			
-		case ACTIONID_VR_CONVERGENCE_DECREASE:
-			if( p_vout && b_vrnav )
-			{
-				float conv = var_InheritFloat( p_vout, "vr-convergence" );
-				conv -= 0.5f; // Decrease by 0.5 degrees
-				if (conv < -10.0f) conv = -10.0f; // Min -10 degrees
-				
-				var_Create( p_vout, "vr-convergence", VLC_VAR_FLOAT | VLC_VAR_ISCOMMAND );
-				var_SetFloat( p_vout, "vr-convergence", conv );
-				
-				DisplayMessage( p_vout, _("Convergence: %.1f°"), conv );
-			}
-			break;
-			
-		case ACTIONID_VR_CONVERGENCE_RESET:
-			if( p_vout && b_vrnav )
-			{
-				var_Create( p_vout, "vr-convergence", VLC_VAR_FLOAT | VLC_VAR_ISCOMMAND );
-				var_SetFloat( p_vout, "vr-convergence", 0.0f );
-				DisplayMessage( p_vout, _("Convergence reset") );
-			}
-			break;
-		 
-		 case ACTIONID_TOGGLE_AUTOSCALE:
+            if( p_vout && b_vrnav )
+            {
+                // Get current value
+                float conv = var_InheritFloat( p_vout, "vr-convergence" );
+                conv += 0.5f; // Increase by 0.5 degrees
+                if (conv > 10.0f) conv = 10.0f; // Max 10 degrees
+                
+                // Create/set variable on vout
+                var_Create( p_vout, "vr-convergence", VLC_VAR_FLOAT | VLC_VAR_ISCOMMAND );
+                var_SetFloat( p_vout, "vr-convergence", conv );
+                
+                DisplayMessage( p_vout, _("Convergence: %.1f°"), conv );
+            }
+            break;
+            
+        case ACTIONID_VR_CONVERGENCE_DECREASE:
+            if( p_vout && b_vrnav )
+            {
+                float conv = var_InheritFloat( p_vout, "vr-convergence" );
+                conv -= 0.5f; // Decrease by 0.5 degrees
+                if (conv < -10.0f) conv = -10.0f; // Min -10 degrees
+                
+                var_Create( p_vout, "vr-convergence", VLC_VAR_FLOAT | VLC_VAR_ISCOMMAND );
+                var_SetFloat( p_vout, "vr-convergence", conv );
+                
+                DisplayMessage( p_vout, _("Convergence: %.1f°"), conv );
+            }
+            break;
+            
+        case ACTIONID_VR_CONVERGENCE_RESET:
+            if( p_vout && b_vrnav )
+            {
+                var_Create( p_vout, "vr-convergence", VLC_VAR_FLOAT | VLC_VAR_ISCOMMAND );
+                var_SetFloat( p_vout, "vr-convergence", 0.0f );
+                DisplayMessage( p_vout, _("Convergence reset") );
+            }
+            break;
+         
+         case ACTIONID_TOGGLE_AUTOSCALE:
             if( p_vout )
             {
                 float f_scalefactor = var_GetFloat( p_vout, "zoom" );
