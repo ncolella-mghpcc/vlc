@@ -2559,12 +2559,12 @@ vlc_module_begin ()
              CHAPTER_NEXT_LONGTEXT, true )
     add_key( "key-quit", KEY_QUIT, QUIT_KEY_TEXT,
              QUIT_KEY_LONGTEXT, false )
-    add_key( "key-vol-up", KEY_VOL_UP, VOL_UP_KEY_TEXT,
-             VOL_UP_KEY_LONGTEXT, false )
     add_key( "key-vol-down", KEY_VOL_DOWN, VOL_DOWN_KEY_TEXT,
-             VOL_DOWN_KEY_LONGTEXT, false )
+         VOL_DOWN_KEY_LONGTEXT, false )
     add_key( "key-vol-mute", KEY_VOL_MUTE, VOL_MUTE_KEY_TEXT,
              VOL_MUTE_KEY_LONGTEXT, false )
+    add_key( "key-vol-up", KEY_VOL_UP, VOL_UP_KEY_TEXT,
+             VOL_UP_KEY_LONGTEXT, false )
     add_key( "key-vr-convergence-decrease", KEY_UNSET, VR_CONVERGENCE_DECREASE_KEY_TEXT, VR_CONVERGENCE_DECREASE_KEY_LONGTEXT, false )
     add_key( "key-vr-convergence-increase", KEY_UNSET, VR_CONVERGENCE_INCREASE_KEY_TEXT, VR_CONVERGENCE_INCREASE_KEY_LONGTEXT, false )
     add_key( "key-vr-convergence-reset", KEY_UNSET, VR_CONVERGENCE_RESET_KEY_TEXT, VR_CONVERGENCE_RESET_KEY_LONGTEXT, false )
