@@ -2257,6 +2257,9 @@ vlc_module_begin ()
 #   define KEY_VOL_UP             "Command+Up"
 #   define KEY_VOL_DOWN           "Command+Down"
 #   define KEY_VOL_MUTE           "Command+Alt+Down"
+#   define KEY_VR_CONVERGENCE_DECREASE  NULL
+#   define KEY_VR_CONVERGENCE_INCREASE  NULL
+#   define KEY_VR_CONVERGENCE_RESET     NULL
 #   define KEY_SUBDELAY_UP        "j"
 #   define KEY_SUBDELAY_DOWN      "h"
 #   define KEY_SUBPOS_DOWN        NULL
@@ -2389,11 +2392,17 @@ vlc_module_begin ()
 #   define KEY_VOL_UP             "Ctrl+Up"
 #   define KEY_VOL_DOWN           "Ctrl+Down"
 #   define KEY_VOL_MUTE           "m"
+#   define KEY_VR_CONVERGENCE_DECREASE  NULL
+#   define KEY_VR_CONVERGENCE_INCREASE  NULL
+#   define KEY_VR_CONVERGENCE_RESET     NULL
 #   define KEY_FRAME_NEXT         "e"
 #else
 #   define KEY_VOL_UP             "Ctrl+Up\tVolume Up"
 #   define KEY_VOL_DOWN           "Ctrl+Down\tVolume Down"
 #   define KEY_VOL_MUTE           "m\tVolume Mute"
+#   define KEY_VR_CONVERGENCE_DECREASE  NULL
+#   define KEY_VR_CONVERGENCE_INCREASE  NULL
+#   define KEY_VR_CONVERGENCE_RESET     NULL
 #   define KEY_FRAME_NEXT         "e\tBrowser Next"
 #endif
 
