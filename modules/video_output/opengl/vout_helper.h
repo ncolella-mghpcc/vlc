@@ -265,4 +265,20 @@ int vout_display_opengl_Prepare(vout_display_opengl_t *vgl,
 int vout_display_opengl_Display(vout_display_opengl_t *vgl,
                                 const video_format_t *source);
 
+void vout_display_opengl_SetWindowAspectRatio(vout_display_opengl_t *vgl,
+                                              float f_sar);
+
+void vout_display_opengl_Viewport(vout_display_opengl_t *vgl, int x, int y,
+                                  unsigned width, unsigned height);
+
+int vout_display_opengl_Prepare(vout_display_opengl_t *vgl,
+                                picture_t *picture, subpicture_t *subpicture);
+int vout_display_opengl_Display(vout_display_opengl_t *vgl,
+                                const video_format_t *source);
+
+// ADD THESE TWO LINES:
+void vout_display_opengl_SetConvergence(vout_display_opengl_t *vgl, float offset_degrees);
+
+#endif
+
 #endif

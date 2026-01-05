@@ -171,6 +171,9 @@ struct vout_display_opengl_t {
     float f_z;    /* Position of the camera on the shpere radius vector */
     float f_z_min;
     float f_sar;
+    
+    /* VR Stereo */
+    float f_convergence_offset; /* Symmetric yaw offset for stereo eye alignment (radians) */
 };
 
 static const GLfloat identity[] = {
@@ -752,6 +755,7 @@ vout_display_opengl_t *vout_display_opengl_New(video_format_t *fmt,
 
     vgl->gl = gl;
 
+
 #if defined(USE_OPENGL_ES2) || defined(HAVE_GL_CORE_SYMBOLS)
 #define GET_PROC_ADDR_CORE(name) vgl->vt.name = gl##name
 #else
@@ -983,11 +987,30 @@ vout_display_opengl_t *vout_display_opengl_New(video_format_t *fmt,
     vgl->region = NULL;
     vgl->pool = NULL;
 
+    // EXISTING CHECK - Keep this as-is
     if (vgl->fmt.projection_mode != PROJECTION_MODE_RECTANGULAR
      && vout_display_opengl_SetViewpoint(vgl, viewpoint) != VLC_SUCCESS)
     {
         vout_display_opengl_Delete(vgl);
         return NULL;
+    }
+
+    // ADD THIS BLOCK:
+    /* Initialize convergence offset */
+    vgl->f_convergence_offset = 0.0f;
+    
+    /* Override default FOV for SBS/TB VR videos (AR glasses with 47° FOV) */
+    if (vgl->fmt.projection_mode == PROJECTION_MODE_EQUIRECTANGULAR
+        && (vgl->fmt.multiview_mode == MULTIVIEW_STEREO_SBS || 
+            vgl->fmt.multiview_mode == MULTIVIEW_STEREO_TB))
+    {
+        vlc_viewpoint_t vr_viewpoint = *viewpoint;
+        if (vr_viewpoint.fov == FIELD_OF_VIEW_DEGREES_DEFAULT)
+        {
+            vr_viewpoint.fov = 47.0f; // Default FOV for AR glasses
+            vout_display_opengl_SetViewpoint(vgl, &vr_viewpoint);
+            msg_Dbg(gl, "VR Stereo mode: Set default FOV to 47°");
+        }
     }
 
     *fmt = vgl->fmt;
@@ -1033,6 +1056,7 @@ void vout_display_opengl_Delete(vout_display_opengl_t *vgl)
             vgl->vt.DeleteTextures(1, &vgl->region[i].texture);
     }
     free(vgl->region);
+
     GL_ASSERT_NOERROR();
 
     free(vgl);
@@ -1642,7 +1666,13 @@ static void GetTextureCropParamsForStereo(unsigned i_nbTextures,
     }
 }
 
+typedef enum {
+    STEREO_EYE_LEFT,
+    STEREO_EYE_RIGHT,
+} stereo_eye_t;
+
 static void TextureCropForStereo(vout_display_opengl_t *vgl,
+                                 stereo_eye_t eye,
                                  float *left, float *top,
                                  float *right, float *bottom)
 {
@@ -1652,17 +1682,21 @@ static void TextureCropForStereo(vout_display_opengl_t *vgl,
     switch (vgl->fmt.multiview_mode)
     {
     case MULTIVIEW_STEREO_TB:
-        // Display only the left eye.
-        stereoCoefs[0] = 1; stereoCoefs[1] = 0.5;
-        stereoOffsets[0] = 0; stereoOffsets[1] = 0;
+        // Top-Bottom: Each eye uses half height
+        stereoCoefs[0] = 1.0;    // Full width
+        stereoCoefs[1] = 0.5;    // Half height
+        stereoOffsets[0] = 0;    // No horizontal offset
+        stereoOffsets[1] = (eye == STEREO_EYE_LEFT) ? 0 : 0.5; // Top or bottom half
         GetTextureCropParamsForStereo(vgl->prgm->tc->tex_count,
                                       stereoCoefs, stereoOffsets,
                                       left, top, right, bottom);
         break;
     case MULTIVIEW_STEREO_SBS:
-        // Display only the left eye.
-        stereoCoefs[0] = 0.5; stereoCoefs[1] = 1;
-        stereoOffsets[0] = 0; stereoOffsets[1] = 0;
+        // Side-by-Side: Each eye uses half width
+        stereoCoefs[0] = 0.5;    // Half width
+        stereoCoefs[1] = 1.0;    // Full height
+        stereoOffsets[0] = (eye == STEREO_EYE_LEFT) ? 0 : 0.5; // Left or right half
+        stereoOffsets[1] = 0;    // No vertical offset
         GetTextureCropParamsForStereo(vgl->prgm->tc->tex_count,
                                       stereoCoefs, stereoOffsets,
                                       left, top, right, bottom);
@@ -1677,10 +1711,20 @@ int vout_display_opengl_Display(vout_display_opengl_t *vgl,
 {
     GL_ASSERT_NOERROR();
 
-    /* Why drawing here and not in Render()? Because this way, the
-       OpenGL providers can call vout_display_opengl_Display to force redraw.
-       Currently, the OS X provider uses it to get a smooth window resizing */
     vgl->vt.Clear(GL_COLOR_BUFFER_BIT);
+
+    /* Check if stereo convergence has been changed (polled each frame) */
+    if (vgl->fmt.projection_mode == PROJECTION_MODE_EQUIRECTANGULAR &&
+        (vgl->fmt.multiview_mode == MULTIVIEW_STEREO_SBS || 
+         vgl->fmt.multiview_mode == MULTIVIEW_STEREO_TB))
+    {
+        float conv_degrees = var_InheritFloat(vgl->gl, "vr-convergence");
+        float conv_radians = conv_degrees * (float)M_PI / 180.0f;
+        if (fabsf(conv_radians - vgl->f_convergence_offset) > 0.001f)
+        {
+            vgl->f_convergence_offset = conv_radians;
+        }
+    }
 
     vgl->vt.UseProgram(vgl->prgm->id);
 
@@ -1701,34 +1745,95 @@ int vout_display_opengl_Display(vout_display_opengl_t *vgl,
             float scale_h = (float)tc->texs[j].h.num / tc->texs[j].h.den
                           / vgl->tex_height[j];
 
-            /* Warning: if NPOT is not supported a larger texture is
-               allocated. This will cause right and bottom coordinates to
-               land on the edge of two texels with the texels to the
-               right/bottom uninitialized by the call to
-               glTexSubImage2D. This might cause a green line to appear on
-               the right/bottom of the display.
-               There are two possible solutions:
-               - Manually mirror the edges of the texture.
-               - Add a "-1" when computing right and bottom, however the
-               last row/column might not be displayed at all.
-            */
             left[j]   = (source->i_x_offset +                       0 ) * scale_w;
             top[j]    = (source->i_y_offset +                       0 ) * scale_h;
             right[j]  = (source->i_x_offset + source->i_visible_width ) * scale_w;
             bottom[j] = (source->i_y_offset + source->i_visible_height) * scale_h;
         }
 
-        TextureCropForStereo(vgl, left, top, right, bottom);
-        int ret = SetupCoords(vgl, left, top, right, bottom);
-        if (ret != VLC_SUCCESS)
-            return ret;
-
         vgl->last_source.i_x_offset = source->i_x_offset;
         vgl->last_source.i_y_offset = source->i_y_offset;
         vgl->last_source.i_visible_width = source->i_visible_width;
         vgl->last_source.i_visible_height = source->i_visible_height;
+        
+        // Check if we're in stereo mode
+        bool is_stereo = (vgl->fmt.multiview_mode == MULTIVIEW_STEREO_SBS || 
+                          vgl->fmt.multiview_mode == MULTIVIEW_STEREO_TB);
+        
+        if (is_stereo && vgl->fmt.projection_mode == PROJECTION_MODE_EQUIRECTANGULAR)
+        {
+            // For stereo VR, we need to render each eye separately with convergence offset
+            
+            // Save original yaw
+            float original_teta = vgl->f_teta;
+            
+            // Setup viewport for left eye (left half of screen for SBS, top half for TB)
+            if (vgl->fmt.multiview_mode == MULTIVIEW_STEREO_SBS)
+                vgl->vt.Viewport(0, 0, vgl->fmt.i_width / 2, vgl->fmt.i_height);
+            else // MULTIVIEW_STEREO_TB
+                vgl->vt.Viewport(0, vgl->fmt.i_height / 2, vgl->fmt.i_width, vgl->fmt.i_height / 2);
+            
+            // Apply convergence for left eye (positive offset = look inward)
+            vgl->f_teta = original_teta + vgl->f_convergence_offset;
+            getViewpointMatrixes(vgl, vgl->fmt.projection_mode, vgl->prgm);
+            
+            // Crop to left eye
+            float left_left[PICTURE_PLANE_MAX], left_top[PICTURE_PLANE_MAX];
+            float left_right[PICTURE_PLANE_MAX], left_bottom[PICTURE_PLANE_MAX];
+            memcpy(left_left, left, sizeof(left));
+            memcpy(left_top, top, sizeof(top));
+            memcpy(left_right, right, sizeof(right));
+            memcpy(left_bottom, bottom, sizeof(bottom));
+            TextureCropForStereo(vgl, STEREO_EYE_LEFT, left_left, left_top, left_right, left_bottom);
+            
+            int ret = SetupCoords(vgl, left_left, left_top, left_right, left_bottom);
+            if (ret != VLC_SUCCESS)
+                return ret;
+            DrawWithShaders(vgl, vgl->prgm);
+            
+            // Setup viewport for right eye (right half for SBS, bottom half for TB)
+            if (vgl->fmt.multiview_mode == MULTIVIEW_STEREO_SBS)
+                vgl->vt.Viewport(vgl->fmt.i_width / 2, 0, vgl->fmt.i_width / 2, vgl->fmt.i_height);
+            else // MULTIVIEW_STEREO_TB
+                vgl->vt.Viewport(0, 0, vgl->fmt.i_width, vgl->fmt.i_height / 2);
+            
+            // Apply convergence for right eye (negative offset = look inward)
+            vgl->f_teta = original_teta - vgl->f_convergence_offset;
+            getViewpointMatrixes(vgl, vgl->fmt.projection_mode, vgl->prgm);
+            
+            // Crop to right eye
+            float right_left[PICTURE_PLANE_MAX], right_top[PICTURE_PLANE_MAX];
+            float right_right[PICTURE_PLANE_MAX], right_bottom[PICTURE_PLANE_MAX];
+            memcpy(right_left, left, sizeof(left));
+            memcpy(right_top, top, sizeof(top));
+            memcpy(right_right, right, sizeof(right));
+            memcpy(right_bottom, bottom, sizeof(bottom));
+            TextureCropForStereo(vgl, STEREO_EYE_RIGHT, right_left, right_top, right_right, right_bottom);
+            
+            ret = SetupCoords(vgl, right_left, right_top, right_right, right_bottom);
+            if (ret != VLC_SUCCESS)
+                return ret;
+            DrawWithShaders(vgl, vgl->prgm);
+            
+            // Restore original yaw and viewport
+            vgl->f_teta = original_teta;
+            getViewpointMatrixes(vgl, vgl->fmt.projection_mode, vgl->prgm);
+        }
+        else
+        {
+            // Non-stereo or non-VR mode: render normally
+            TextureCropForStereo(vgl, STEREO_EYE_LEFT, left, top, right, bottom);
+            int ret = SetupCoords(vgl, left, top, right, bottom);
+            if (ret != VLC_SUCCESS)
+                return ret;
+            DrawWithShaders(vgl, vgl->prgm);
+        }
     }
-    DrawWithShaders(vgl, vgl->prgm);
+    else
+    {
+        // Source hasn't changed, just redraw with current settings
+        DrawWithShaders(vgl, vgl->prgm);
+    }
 
     /* Draw the subpictures */
     // Change the program for overlays
@@ -1811,7 +1916,13 @@ int vout_display_opengl_Display(vout_display_opengl_t *vgl,
     vlc_gl_Swap(vgl->gl);
 
     GL_ASSERT_NOERROR();
+	
 
     return VLC_SUCCESS;
 }
 
+void vout_display_opengl_SetConvergence(vout_display_opengl_t *vgl, float offset_degrees)
+{
+	vgl->f_convergence_offset = offset_degrees * (float)M_PI / 180.0f;
+	msg_Dbg(vgl->gl, "Convergence offset set to %.2f degrees", offset_degrees);
+}
