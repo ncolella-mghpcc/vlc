@@ -1177,18 +1177,17 @@ static int PutAction( intf_thread_t *p_intf, input_thread_t *p_input,
                                        false );
             break;
 
-         case ACTIONID_VR_CONVERGENCE_INCREASE:
+        case ACTIONID_VR_CONVERGENCE_INCREASE:
 			if( p_vout && b_vrnav )
 			{
-				// Get current value - inherit from parent objects
+				// Get current value
 				float conv = var_InheritFloat( p_vout, "vr-convergence" );
 				conv += 0.5f; // Increase by 0.5 degrees
-				conv = fminf(conv, 10.0f); // Max 10 degrees
+				if (conv > 10.0f) conv = 10.0f; // Max 10 degrees
 				
-				// Store on libvlc so gl can inherit it
-				libvlc_int_t *p_libvlc = vlc_object_instance(p_vout);
-				var_Create( p_libvlc, "vr-convergence", VLC_VAR_FLOAT );
-				var_SetFloat( p_libvlc, "vr-convergence", conv );
+				// Create/set variable on vout
+				var_Create( p_vout, "vr-convergence", VLC_VAR_FLOAT | VLC_VAR_ISCOMMAND );
+				var_SetFloat( p_vout, "vr-convergence", conv );
 				
 				DisplayMessage( p_vout, _("Convergence: %.1f°"), conv );
 			}
@@ -1199,11 +1198,10 @@ static int PutAction( intf_thread_t *p_intf, input_thread_t *p_input,
 			{
 				float conv = var_InheritFloat( p_vout, "vr-convergence" );
 				conv -= 0.5f; // Decrease by 0.5 degrees
-				conv = fmaxf(conv, -10.0f); // Min -10 degrees
+				if (conv < -10.0f) conv = -10.0f; // Min -10 degrees
 				
-				libvlc_int_t *p_libvlc = vlc_object_instance(p_vout);
-				var_Create( p_libvlc, "vr-convergence", VLC_VAR_FLOAT );
-				var_SetFloat( p_libvlc, "vr-convergence", conv );
+				var_Create( p_vout, "vr-convergence", VLC_VAR_FLOAT | VLC_VAR_ISCOMMAND );
+				var_SetFloat( p_vout, "vr-convergence", conv );
 				
 				DisplayMessage( p_vout, _("Convergence: %.1f°"), conv );
 			}
@@ -1212,9 +1210,8 @@ static int PutAction( intf_thread_t *p_intf, input_thread_t *p_input,
 		case ACTIONID_VR_CONVERGENCE_RESET:
 			if( p_vout && b_vrnav )
 			{
-				libvlc_int_t *p_libvlc = vlc_object_instance(p_vout);
-				var_Create( p_libvlc, "vr-convergence", VLC_VAR_FLOAT );
-				var_SetFloat( p_libvlc, "vr-convergence", 0.0f );
+				var_Create( p_vout, "vr-convergence", VLC_VAR_FLOAT | VLC_VAR_ISCOMMAND );
+				var_SetFloat( p_vout, "vr-convergence", 0.0f );
 				DisplayMessage( p_vout, _("Convergence reset") );
 			}
 			break;
